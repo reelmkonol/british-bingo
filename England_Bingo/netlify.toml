@@ -1,0 +1,20 @@
+[build]
+  publish = "public"
+  functions = "netlify/functions"
+  command = "echo 'Static site — nothing to build.'"
+
+[functions]
+  node_bundler = "esbuild"
+
+# Friendly API paths -> the single function that handles every action.
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+
+# Invite links like /?g=ABCDE are handled client-side; make sure any
+# unexpected path still lands on the app rather than a 404.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
