@@ -70,7 +70,7 @@ const DEFAULT_POOL = [
 
   // --- Oxford ---
   "An Oxford congestion-charge camera",
-  "The Botley Road roadworks, still",
+  "The Botley Road roadworks, still shut down",
   "An LTN planter with something written on it",
   "A bike chained up that is never coming back",
   "A tour group being told a Harry Potter fact",
