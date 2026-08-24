@@ -29,7 +29,7 @@
 
   <div class="stack" id="home-resume" hidden>
     <button class="btn btn--primary" id="resume-btn"></button>
-    <p class="note">Picks up exactly where you left off.</p>
+    <button class="linkish" id="forget-btn" type="button">Forget this game on this device</button>
   </div>
 
   <form class="stack" id="join-form" autocomplete="off">
@@ -77,6 +77,9 @@
 <!-- ============================ GAME ============================ -->
 <section class="screen screen--game" id="screen-game" hidden>
   <header class="bar" id="bar">
+    <button class="bar__back" id="go-home" type="button" aria-label="Back to the home screen">
+      <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M12.5 4 6.5 10l6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
     <div class="bar__id">
       <h2 class="bar__title" id="game-title">England Bingo</h2>
       <button class="bar__code" id="copy-link" type="button" title="Copy the invite link">
@@ -118,6 +121,8 @@
       <button class="sheet__item" data-menu="free" role="menuitem" type="button">Edit centre square</button>
       <button class="sheet__item" data-menu="shuffle" role="menuitem" type="button">Shuffle my board</button>
       <button class="sheet__item" data-menu="switch" role="menuitem" type="button">Change player on this device</button>
+      <button class="sheet__item" data-menu="home" role="menuitem" type="button">Back to the home screen</button>
+      <button class="sheet__item sheet__item--danger" data-menu="delete" role="menuitem" type="button">Delete this game for everyone</button>
       <button class="sheet__item sheet__item--quiet" data-menu="close" role="menuitem" type="button">Close</button>
     </div>
   </div>

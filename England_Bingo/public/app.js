@@ -23,37 +23,34 @@ const DEFAULT_POOL = [
   // --- Tier 1: near-certain. These keep the game moving. ---
   "Someone says 'cheers' instead of 'thanks'",
   "Someone apologises when you were the one in the way",
-  "'See it. Say it. Sorted.' over a station PA system",
+  "'See it. Say it. Sorted.' over a station tannoy",
   "A rail replacement bus, or a sign warning of one",
   "An apology for a delay of oddly precise length",
-  "A charity shop on the main street",
+  "Tapping in with a contactless card",
+  "A pigeon inside a railway station",
+  "A charity shop on the high street",
   "A bank branch that is now a cafe or a barber",
-  "A credit card-only sign",
-  "A pub named after a non-mammalian animal",
-  "A crooked hanging pub sign",
+  "A card-only sign where cash used to work",
+  "A pub named after an animal",
+  "A hanging pub sign",
   "A dog inside a pub",
   "A doorway you have to duck under",
   "A pint drunk outside in unsuitable weather",
   "A Sunday roast on a menu",
   "A Greggs",
-  "A Pret a Manger",
-  "Scaffolding on something older than 1700",
-  "A red post box used for something other than mail",
+  "A Pret",
+  "Scaffolding on something several centuries old",
+  "A red post box",
   "A church with a square tower",
   "A brown tourist-attraction road sign",
   "A public footpath sign or a stile",
   "Roadworks with temporary traffic lights",
   "A pothole with a spray-painted ring round it",
   "Someone mentions the weather within a minute of meeting",
-  "Someone says 'dodgy'",
-  "Someone says 'gobsmacked'",
-  "Someone says 'daft'",
+  "Someone says 'brilliant'",
+  "Someone says 'lovely'",
   "Someone says 'you alright?' as a greeting",
-  "Someone says 'Bob's your uncle",
   "A queue that formed with no visible instruction",
-  "A reference to Meghan Markle",
-  "Someone eats haggis",
-
 
   // --- London ---
   "A ULEZ or number-plate camera",
@@ -67,9 +64,9 @@ const DEFAULT_POOL = [
   "A crane over a 'luxury apartments' hoarding",
   "A render of impossibly happy people on a building site",
   "A food bank collection point in a supermarket",
-  "Migratory toad crossing sign",
+  "A rough sleeper outside somewhere very expensive",
   "Someone tuts audibly",
-  "Someone stands on the left on an esclator",
+  "Someone stands on the left and is silently judged",
 
   // --- Oxford ---
   "An Oxford congestion-charge camera",
@@ -81,21 +78,21 @@ const DEFAULT_POOL = [
   "A porter's lodge with a pigeonhole wall",
   "Punting, done badly",
   "Someone mentions the Bodleian's oath about naked flames",
-  "A plaque naming a controversial donor",
+  "A plaque naming a donor someone has feelings about",
 
   // --- Cotswolds ---
   "A drystone wall",
   "A thatched roof",
   "Honey-coloured stone catching the light",
-  "Sheep on the road",
-  "A single-track road where we pause for another car",
+  "Sheep on or beside the road",
+  "A single-track road with passing places",
   "A hedgerow taller than the car",
   "A red kite overhead",
   "A ford, or a 'road liable to flooding' sign",
   "A village shop run by volunteers",
   "An honesty box at a farm gate",
   "A key safe on a cottage wall",
-  "A Range Rover that has never seen mud",
+  "A Range Rover that has plainly never seen mud",
   "A farm shop charging a startling price for bread",
   "A Clarkson's Farm reference, sign or tour bus",
   "Solar panels on a barn roof",
@@ -106,14 +103,13 @@ const DEFAULT_POOL = [
 
   // --- Stratford and the theatre ---
   "A swan on the Avon",
-  "A pun relating to a Shakespeare play",
+  "A programme priced like a small meal",
   "Someone loudly explaining the plot during the interval",
   "Ice cream sold in the interval",
   "A standing ovation",
-  "Someone in tacky Game of Thrones merchandise",
+  "Someone in Game of Thrones merchandise",
   "A Shakespeare line used as a shop or pub name",
   "A coach party being counted",
-  "A cat cafe",
 
   // --- Water, councils and the state of things ---
   "A sewage warning or 'do not swim' notice by water",
@@ -157,6 +153,7 @@ const el = {
   },
   homeResume: $("#home-resume"),
   resumeBtn: $("#resume-btn"),
+  forgetBtn: $("#forget-btn"),
   joinForm: $("#join-form"),
   joinCode: $("#join-code"),
   joinError: $("#join-error"),
@@ -174,6 +171,7 @@ const el = {
   gameCode: $("#game-code"),
   copyLink: $("#copy-link"),
   copyLabel: $("#copy-label"),
+  goHome: $("#go-home"),
   menuBtn: $("#menu-btn"),
   menuSheet: $("#menu-sheet"),
   roster: $("#roster"),
@@ -250,6 +248,7 @@ const S = {
   layout: "grid",
   boardSig: null,
   strikeSig: "",
+  needFit: true,
   pushing: false,
   pollId: null,
 };
@@ -418,7 +417,10 @@ function renderBoard() {
   el.boardFrame.hidden = S.layout !== "grid";
   el.checklist.hidden = S.layout !== "list";
 
-  if (structureChanged || el.board.children.length !== CELLS) buildGrid(p, isMine);
+  if (structureChanged || el.board.children.length !== CELLS) {
+    buildGrid(p, isMine);
+    S.needFit = true;
+  }
   if (structureChanged || el.checklist.children.length !== CELLS) buildList(p, isMine);
 
   for (let i = 0; i < CELLS; i++) {
@@ -430,6 +432,10 @@ function renderBoard() {
   }
 
   renderStrikes(p);
+  if (S.needFit && S.layout === "grid") {
+    S.needFit = false;
+    scheduleFit();
+  }
   S.boardSig = sig;
 }
 
@@ -442,7 +448,10 @@ function buildGrid(p, isMine) {
     cell.dataset.index = String(i);
     cell.setAttribute("role", "gridcell");
     if (i === FREE_INDEX) cell.classList.add("is-free");
-    cell.textContent = cellText(p, i);
+    const text = document.createElement("span");
+    text.className = "cell__text";
+    text.textContent = cellText(p, i);
+    cell.append(text);
     cell.disabled = !isMine;
     el.board.append(cell);
   }
@@ -467,6 +476,42 @@ function buildList(p, isMine) {
     el.checklist.append(li);
   }
 }
+
+/**
+ * Size each clue to its square. A length-based first guess gets almost
+ * everything right in one pass; the measuring loop then rescues the few
+ * that still overflow (long words, narrow phones, big system font sizes).
+ */
+function fitCells() {
+  const cells = Array.from(el.board.children);
+  if (!cells.length || !cells[0].clientHeight) return;
+
+  for (const cell of cells) {
+    const len = cell.textContent.trim().length;
+    const guess = len <= 16 ? 1.2
+      : len <= 24 ? 1.08
+      : len <= 32 ? 0.98
+      : len <= 40 ? 0.9
+      : len <= 48 ? 0.83
+      : 0.77;
+    cell.style.setProperty("--fit", guess.toFixed(2));
+  }
+
+  const padding = parseFloat(getComputedStyle(cells[0]).paddingTop) * 2;
+  for (const cell of cells) {
+    const text = cell.firstElementChild;
+    if (!text) continue;
+    const room = cell.clientHeight - padding;
+    let fit = parseFloat(cell.style.getPropertyValue("--fit")) || 1;
+    let guard = 10;
+    while (guard-- > 0 && fit > 0.5 && text.offsetHeight > room + 0.5) {
+      fit -= 0.07;
+      cell.style.setProperty("--fit", fit.toFixed(2));
+    }
+  }
+}
+
+const scheduleFit = () => requestAnimationFrame(fitCells);
 
 function renderStrikes(p) {
   const lines = completedLines(p.marks);
@@ -589,10 +634,10 @@ async function refresh() {
     return true;
   } catch (err) {
     if (String(err.message).includes("No game")) {
-      store.drop(sessionKey);
-      show("home");
-      el.joinError.textContent = "That game code no longer exists.";
       stopPolling();
+      forgetGame(S.code);
+      show("home");
+      el.joinError.textContent = "That game has been deleted.";
     }
     return false;
   }
@@ -633,6 +678,48 @@ async function enterGame(code, playerId) {
     pushMarks();
     startPolling();
   }
+}
+
+function paintResume() {
+  const saved = store.read(sessionKey);
+  if (!saved?.code) {
+    el.homeResume.hidden = true;
+    return;
+  }
+  const cached = store.read(cacheKey(saved.code));
+  const who = cached?.players?.find((p) => p.id === saved.playerId);
+  el.resumeBtn.textContent = who
+    ? `Back to your board (${who.name})`
+    : `Back to game ${saved.code}`;
+  el.homeResume.hidden = false;
+}
+
+/** Leaves the game on screen but keeps it resumable. */
+function goHome() {
+  stopPolling();
+  closeMenu();
+  paintResume();
+  el.joinError.textContent = "";
+  el.joinCode.value = "";
+  history.replaceState(null, "", location.pathname);
+  show("home");
+}
+
+/** Removes the game from this device only. Other players are untouched. */
+function forgetGame(code) {
+  if (!code) return;
+  store.drop(sessionKey);
+  store.drop(cacheKey(code));
+  if (S.playerId) store.drop(pendingKey(code, S.playerId));
+  if (S.code === code) {
+    S.code = null;
+    S.playerId = null;
+    S.config = null;
+    S.players = [];
+    S.viewing = null;
+    S.boardSig = null;
+  }
+  paintResume();
 }
 
 /* --------------------------- the join gate ------------------------- */
@@ -778,6 +865,7 @@ el.viewList.addEventListener("click", () => setLayout("list"));
 
 function setLayout(mode) {
   S.layout = mode;
+  S.needFit = true;
   S.boardSig = null;
   S.strikeSig = "";
   el.viewGrid.classList.toggle("is-on", mode === "grid");
@@ -786,6 +874,13 @@ function setLayout(mode) {
   el.viewList.setAttribute("aria-selected", String(mode === "list"));
   render();
 }
+
+let fitTimer = null;
+window.addEventListener("resize", () => {
+  clearTimeout(fitTimer);
+  fitTimer = setTimeout(fitCells, 150);
+});
+if (document.fonts?.ready) document.fonts.ready.then(fitCells).catch(() => {});
 
 el.copyLink.addEventListener("click", copyInvite);
 
@@ -799,6 +894,16 @@ async function copyInvite() {
     toast(url);
   }
 }
+
+el.goHome.addEventListener("click", goHome);
+
+el.forgetBtn.addEventListener("click", () => {
+  const saved = store.read(sessionKey);
+  if (!saved?.code) return;
+  if (!confirm(`Remove game ${saved.code} from this device? Your board stays in the game — you can rejoin with the code.`)) return;
+  forgetGame(saved.code);
+  toast("Removed from this device.");
+});
 
 el.menuBtn.addEventListener("click", () => {
   el.menuSheet.hidden = false;
@@ -840,6 +945,31 @@ el.menuSheet.addEventListener("click", async (e) => {
       S.strikeSig = "";
       await refresh();
       toast("New board dealt.");
+    } catch (err) { toast(err.message); }
+    return;
+  }
+
+  if (action === "home") return goHome();
+
+  if (action === "delete") {
+    const typed = await askText({
+      title: "Delete this game",
+      label: `This wipes the game and every player's board, for everyone. Type ${S.code} to confirm.`,
+      value: "",
+      cta: "Delete permanently",
+    });
+    if (!typed || typed.toUpperCase() !== S.code) {
+      if (typed) toast("Code didn't match — nothing deleted.");
+      return;
+    }
+    try {
+      const code = S.code;
+      await api("delete", { body: { code } });
+      forgetGame(code);
+      stopPolling();
+      history.replaceState(null, "", location.pathname);
+      show("home");
+      toast("Game deleted.");
     } catch (err) { toast(err.message); }
     return;
   }
@@ -888,14 +1018,6 @@ window.addEventListener("online", () => { pushMarks(); refresh(); });
     return;
   }
 
-  if (saved?.code) {
-    const cached = store.read(cacheKey(saved.code));
-    const who = cached?.players?.find((p) => p.id === saved.playerId);
-    el.resumeBtn.textContent = who
-      ? `Back to your board (${who.name})`
-      : `Back to game ${saved.code}`;
-    el.homeResume.hidden = false;
-  }
-
+  paintResume();
   show("home");
 })();

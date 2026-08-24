@@ -232,6 +232,19 @@ button, input, textarea { font: inherit; color: inherit; }
 
 .backlink:hover { color: var(--pillar); }
 
+.linkish {
+  background: none;
+  border: 0;
+  padding: 0.25rem;
+  font-size: 0.85rem;
+  color: var(--slate);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.linkish:hover { color: var(--pillar); }
+
 .rule {
   display: flex;
   align-items: center;
@@ -301,6 +314,23 @@ button, input, textarea { font: inherit; color: inherit; }
   text-decoration: underline;
   text-underline-offset: 2px;
 }
+
+.bar__back {
+  background: none;
+  border: 0;
+  padding: 0;
+  margin-right: -0.25rem;
+  color: inherit;
+  width: 1.75rem;
+  height: 2.25rem;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  flex: none;
+  opacity: 0.8;
+}
+
+.bar__back:hover { opacity: 1; }
 
 .bar__menu {
   background: none;
@@ -455,24 +485,31 @@ button, input, textarea { font: inherit; color: inherit; }
 }
 
 .cell {
+  --fit: 1;
   background: var(--card);
   border: 0;
   margin: 0;
   padding: 5cqw 3cqw;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  font-family: var(--sans);
-  font-size: clamp(7px, 2.75cqw, 14px);
-  font-weight: 500;
-  line-height: 1.18;
-  letter-spacing: -0.005em;
-  hyphens: auto;
+  display: grid;
+  place-items: center;
   overflow: hidden;
   cursor: pointer;
   color: var(--ink);
   transition: background-color 120ms linear, color 120ms linear;
+}
+
+/* Base size scales with the board; --fit is set per cell in JS so a long
+   clue shrinks to fit instead of being clipped. */
+.cell__text {
+  font-family: var(--sans);
+  font-size: calc(clamp(7px, 2.75cqw, 14px) * var(--fit));
+  font-weight: 500;
+  line-height: 1.16;
+  letter-spacing: -0.005em;
+  text-align: center;
+  text-wrap: balance;
+  hyphens: auto;
+  overflow-wrap: anywhere;
 }
 
 .cell:disabled { cursor: default; }
@@ -480,14 +517,13 @@ button, input, textarea { font: inherit; color: inherit; }
 .cell.is-marked {
   background: var(--who);
   color: #fff;
-  font-weight: 600;
 }
 
-.cell.is-free {
-  font-family: var(--sign);
-  font-weight: 800;
-  background: #F1EFE6;
-}
+.cell.is-marked .cell__text { font-weight: 600; }
+
+.cell.is-free { background: #F1EFE6; }
+
+.cell.is-free .cell__text { font-family: var(--sign); font-weight: 800; }
 
 .cell.is-free.is-marked { background: var(--who); }
 
@@ -648,6 +684,8 @@ button, input, textarea { font: inherit; color: inherit; }
 
 .sheet__item:hover { background: var(--ink); color: var(--card); }
 .sheet__item--quiet { color: var(--slate); }
+.sheet__item--danger { color: var(--pillar); }
+.sheet__item--danger:hover { background: var(--pillar); color: var(--card); }
 
 .gate__existing {
   display: flex;
