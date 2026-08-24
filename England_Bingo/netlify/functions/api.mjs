@@ -285,6 +285,18 @@ async function handleConfig(req) {
   return json({ config, players });
 }
 
+async function handleDelete(req) {
+  const body = await readBody(req);
+  const code = normaliseCode(body.code);
+  if (!code) return fail("Missing game code.");
+
+  const s = store();
+  const { blobs } = await s.list({ prefix: playerPrefix(code) });
+  await Promise.all(blobs.map((b) => s.delete(b.key).catch(() => null)));
+  await s.delete(cfgKey(code)).catch(() => null);
+  return json({ ok: true });
+}
+
 /* ------------------------------ router ----------------------------- */
 
 const ROUTES = {
@@ -294,6 +306,7 @@ const ROUTES = {
   marks: { method: "POST", run: handleMarks },
   shuffle: { method: "POST", run: handleShuffle },
   config: { method: "POST", run: handleConfig },
+  delete: { method: "POST", run: handleDelete },
 };
 
 export default async (req) => {
